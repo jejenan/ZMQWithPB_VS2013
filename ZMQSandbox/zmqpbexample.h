@@ -46,9 +46,9 @@ class zmqpbexample {
     
     return std::string(static_cast<char*>(message.data()), message.size());
   }
-  
- private:
 
+  void* handle;
+ private:
   std::string endpoint_;
   std::string frontend_;
   std::string backend_;

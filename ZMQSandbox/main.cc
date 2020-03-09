@@ -66,6 +66,7 @@ void simple()
 
   // run the server in a thread
   std::thread thread(start_simple, &z);
+  thread.detach();
   //pthread_create(&thread, NULL, start_simple,  &z);
   
   zmq::context_t context (1);
@@ -107,7 +108,6 @@ void simple()
 	      << pb_response.response_string() << std::endl;
     
   }
-  thread.join();
 }
 
 static void* start_rpc(void* arg) {
@@ -124,6 +124,7 @@ void rpc()
 //   pthread_t thread;
 //   pthread_create(&thread, NULL, start_rpc,  &z);
   std::thread thread(start_rpc, &z);
+  thread.detach();
 
   // the caller would probably be better off as a class and would handle the
   // connection stuff itself, but for brevity ...
@@ -155,7 +156,6 @@ void rpc()
   }
   assert(reverse_response.reversed() == "em esrever");
 
-  thread.join();
 }
 
 // the client's 'service' handler takes care of the wrapping and unwrapping
@@ -230,6 +230,7 @@ void weather()
 //   pthread_create(&thread, NULL, start_weather,  &z);
 
   std::thread thread(start_weather, &z);
+  thread.detach();
   zmq::context_t context (1);
   zmq::socket_t subscriber (context, ZMQ_SUB);
   subscriber.connect(weather_endpoint.c_str());
@@ -281,7 +282,6 @@ void weather()
     delete raw_input;
   }
 
-  thread.join();
 }
 
 static void* start_worker(void* arg) {
@@ -307,10 +307,14 @@ void workers()
   for(int j = 0; j < nthreads; j++) {
 //     pthread_t worker_thread;
 //     pthread_create(&worker_thread, NULL, start_worker, &z);
-      workerthreads.emplace_back(std::thread(start_worker, &z));
+      std::thread worker(start_worker, &z);
+      worker.detach();
+      workerthreads.emplace_back(std::move(worker));
+
   }
   
   std::thread brokerthread(start_broker, &z);
+  brokerthread.detach();
 //   pthread_t broker_thread;
 //   pthread_create(&broker_thread, NULL, start_broker, &z);
 
@@ -340,9 +344,4 @@ void workers()
     std::string response_string = zmqpbexample::s_recv(requester);
     //std::cout << "Received reply " << response_string << std::endl;
   }
-  for (auto&& thread : workerthreads)
-  {
-      thread.join();
-  }
-  brokerthread.join();
 }

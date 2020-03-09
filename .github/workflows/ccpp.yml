@@ -23,6 +23,6 @@ jobs:
         # Enable Specre mitigations
         #spectre: # optional
         # VC++ compiler toolset version
-        toolset: 2013
+        toolset: 12.xx
         # Build for Universal Windows Platform
         #uwp: # optional
